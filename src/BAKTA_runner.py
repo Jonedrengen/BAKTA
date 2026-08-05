@@ -64,6 +64,7 @@ class JobSpecifications:
 
 def main():
     args = arg_parser(sys.argv[1:])
+    print("we ran it!")
 
 if __name__ == '__main__':
     main()
