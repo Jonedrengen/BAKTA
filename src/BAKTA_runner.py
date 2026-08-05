@@ -37,7 +37,7 @@ class Config:
     mem: str = "4G"
 
     @classmethod
-    def from_dict(cls, config_dict: dict) -> Config:
+    def from_dict(cls, config_dict: dict) -> "Config":
         return cls(
             partition=config_dict.get("partition", cls.partition),
             time=config_dict.get("time", cls.time),
