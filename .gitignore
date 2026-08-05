@@ -1,0 +1,10 @@
+#tests
+tests/
+.pytest_cache/
+
+#venv
+.venv/
+
+#python stuff
+src/__pycache__
+src/utilities/__pycache__

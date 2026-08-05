@@ -1,0 +1,18 @@
+{
+    "SLURM": {
+        "partition": "project",
+        "time": "1:00:00",
+        "nodes": 4,
+        "ntasks": 10,
+        "cpus-per-task": 1,
+        "mem": "4G"
+    },
+    "LOCAL": {
+        "threads": 4,
+        "memory": "4G"
+    },
+    "BAKTA": {
+        "path": "/path/to/bakta",
+        "database": "/path/to/bakta/database"
+    }
+}
