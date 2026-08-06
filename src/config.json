@@ -1,4 +1,5 @@
 {
+    "MODE": "SLURM",
     "SLURM": {
         "partition": "project",
         "time": "1:00:00",
@@ -8,8 +9,7 @@
         "mem": "4G"
     },
     "LOCAL": {
-        "threads": 4,
-        "memory": "4G"
+        "threads": 4
     },
     "BAKTA": {
         "path": "/path/to/bakta",
