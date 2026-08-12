@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH -j BAKTA
+#SBATCH -J BAKTA
 #SBATCH --partition=project
 #SBATCH --cpus-per-task=4
 #SBATCH --mem=16G
