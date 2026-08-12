@@ -1,5 +1,11 @@
 #!/bin/bash
-#SBATCH 
+#SBATCH -j=BAKTA
+#SBATCH --partition=project
+#SBATCH --cpus-per-task=4
+#SBATCH --mem=16G
+#SBATCH --error=BAKTA_%j.err
+#SBATCH --output=BAKTA_%j.out
+
 
 #get script directory
 script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
