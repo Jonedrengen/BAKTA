@@ -38,13 +38,8 @@ config_values() {
     # Load configuration values from config_bash.yml
     db=$(grep '^db:' "$config" | awk '{print $2}')
 
-    #validate
-    if [ -z "$partition" ] || [ -z "$cores" ] || [ -z "$mem" ] || [ -z "$job_name" ]; then
-        echo "Error: Missing configuration values in config_bash.yml."
-        echo "partition: $partition"
-        echo "cores: $cores"
-        echo "mem: $mem"
-        echo "job_name: $job_name"
+    if [ -z "$db" ]; then
+        echo "Error: Database path not specified in the configuration file."
         return 1
     fi
     return 0
