@@ -112,4 +112,4 @@ validate_input
 create_output_structure "$output_folder"
 
 #run BAKTA
-parallel --jobs "${SLURM_CPUS_PER_TASK:-1}" run_bakta ::: "$input_folder"/*.{fasta,fna,fa}
+parallel --jobs "${SLURM_CPUS_PER_TASK:-1}" run_bakta ::: "$input_folder"/*.f*
