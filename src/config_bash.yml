@@ -1,0 +1,8 @@
+name: BAKTA_JOSS_bash_config
+description: Configuration file for BAKTA_JOSS_bash
+
+partition: project
+cores: 4
+mem: 16G
+job_name: BAKTA
+db: /path/to/bakta_database
