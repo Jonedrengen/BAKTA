@@ -6,17 +6,23 @@
 #SBATCH --error=BAKTA_%j.err
 #SBATCH --output=BAKTA_%j.out
 
+#author: Jon Sztuk Slotved
 
 #get script directory
 script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 
-#
+#help
 help() {
-    echo "Usage: $0 -i <input_folder> -o <output_folder> [-c <config_file>] [-h]"
-    echo "  -i <input_folder>   : Path to the input folder containing FASTA files."
-    echo "  -o <output_folder>  : Path to the output folder where results will be saved."
-    echo "  -c <config_file>    : Path to the configuration file (default: $script_dir/config_bash.yml)."
-    echo "  -h                  : Display this help message."
+    echo "Usage: $0 -i <input_folder> -o <output_folder> -c <config_file> [-s <sample_list>] [-h]"
+    echo "Options:"
+    echo "  -i <input_folder>   Path to the input folder containing FASTA files."
+    echo "  -o <output_folder>  Path to the output folder where results will be saved."
+    echo "  -c <config_file>    Path to the configuration file (default: config_bash.yml)."
+    echo "  -s <sample_list>    Optional: Path to a file containing a list of sample names to process."
+    echo "  -h                  Display this help message."
+    echo    
+    echo "Note: only takes fasta,fna,fa"
+
 }
 
 # validate input
@@ -37,6 +43,8 @@ config_values() {
 
     # Load configuration values from config_bash.yml
     db=$(grep '^db:' "$config" | awk '{print $2}')
+    conda_source=$(grep '^conda_source:' "$config" | awk '{print $2}')
+    conda_env=$(grep '^conda_env:' "$config" | awk '{print $2}')
 
     if [ -z "$db" ]; then
         echo "Error: Database path not specified in the configuration file."
@@ -54,19 +62,16 @@ create_output_structure() {
 
 #run BAKTA, using GNU parallel to run multiple samples in parallel
 run_bakta() {
-    input_folder="$1"
-    output_folder="$2"
+    local sequence="$1"
+    output_dest="$output_folder/processing_files/${sequence%%.*}"
 
-    parallel -j "$cores" --bar \
-    bakta \
-        --db "$db" \
-        --output "$output_folder/${/.}" \
-        --prefix "${/.}" \
-        --threads 1 \
-        {} \
-        ::: "$input_folder"/*.f*
+    bakta --db "$db" \
+    --input "$sequence" \
+    --output "$output_dest" \
+    --threads 1 \
+    "$sequence"
 }
-export -f help validate_input config_values create_output_structure run_bakta
+export -f run_bakta
 
 #default values
 input_folder=""
@@ -90,6 +95,9 @@ fi
 
 ############# run script #############
 
+. "$conda_source"
+conda activate "$conda_env"
+
 #defines config values
 config_values "$config_file"
 
@@ -100,5 +108,4 @@ validate_input
 create_output_structure "$output_folder"
 
 #run BAKTA
-run_bakta "$input_folder" "$output_folder"
-
+parallel -j +0 run_bakta ::: "$input_folder"/*.{fasta,fna,fa}

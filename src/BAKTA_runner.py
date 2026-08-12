@@ -1,6 +1,7 @@
 from pathlib import Path
 from dataclasses import dataclass
 import subprocess, sys, argparse, json
+import logging
 
 
 ######## FUNCTIONS ########
@@ -8,7 +9,8 @@ import subprocess, sys, argparse, json
 
 def arg_parser(arg_vector: list[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="BAKTA: Bacterial Annotation Tool Kit")
-    parser.add_argument("-i", "--input", required=True, help="Input file or directory")
+    parser.add_argument("-i", "--input_folder", required=False, help="Input folder/directory")
+    parser.add_argument("-f", "--input_file", required=False, help="Single input file")
     parser.add_argument("-o", "--output", required=True, help="Output directory")
     parser.add_argument("-c", "--config", required=False, help="Path to configuration file")
     return parser.parse_args(arg_vector)
@@ -57,41 +59,38 @@ class JobSpecifications:
         self.output_path = output_path
         self.config = config
 
+class BaktaCommandBuilder:
+    """TODO: add this to inject into SlurmCommandBuilder later
+    """
+    ...
+
 class SlurmCommandBuilder:
     def __init__(self, job_specifications: JobSpecifications):
         self.job_specifications = job_specifications
 
-    def build_command(self) -> str:
+    def build_command(self) -> list[str]:
         config = self.job_specifications.config
         input_path = self.job_specifications.input_path
         output_path = self.job_specifications.output_path
 
-        command = (
-            f"sbatch "
-            f"--partition={config.partition} "
-            f"--time={config.time} "
-            f"--nodes={config.nodes} "
-            f"--ntasks={config.ntasks} "
-            f"--cpus-per-task={config.cpus_per_task} "
-            f"--mem={config.mem} "
-            f"--wrap=\"BAKTA --input {input_path} --output {output_path} --database {config.database} --\""
-        )
+        command = [
+            "sbatch",
+            "--partition",str(config.partition),
+            "--time", str(config.time),
+            "--nodes", str(config.nodes),
+            "--ntasks", str(config.ntasks),
+            "--cpus-per-task", str(config.cpus_per_task),
+            "--mem", str(config.mem),
+            "--wrap", f"BAKTA --db {config.database} --output {output_path} {input_path}"
+        ]
         return command
 
 class LocalCommandBuilder:
     def __init__(self, job_specifications: JobSpecifications):
         self.job_specifications = job_specifications
+        ...
 
-    def build_command(self) -> str:
-        config = self.job_specifications.config
-        input_path = self.job_specifications.input_path
-        output_path = self.job_specifications.output_path
 
-        command = (
-            f"BAKTA --input {input_path} --output {output_path} --database {config.database} "
-            f"--threads {config.threads}"
-        )
-        return command
 
 class CommandExecutor:
     def __init__(self, command: str):
@@ -99,7 +98,7 @@ class CommandExecutor:
 
     def execute(self):
         print(f"Executing command: {self.command}")
-        subprocess.run(self.command, shell=True, check=True, text=True)
+        subprocess.run(self.command, check=True, text=True)
 
 
 ######## MAIN ########
