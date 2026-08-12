@@ -18,7 +18,6 @@ help() {
     echo "  -i <input_folder>   Path to the input folder containing FASTA files."
     echo "  -o <output_folder>  Path to the output folder where results will be saved."
     echo "  -c <config_file>    Path to the configuration file (default: config_bash.yml)."
-    echo "  -s <sample_list>    Optional: Path to a file containing a list of sample names to process."
     echo "  -h                  Display this help message."
     echo    
     echo "Note: only takes fasta,fna,fa"
@@ -63,27 +62,32 @@ create_output_structure() {
 #run BAKTA, using GNU parallel to run multiple samples in parallel
 run_bakta() {
     local sequence="$1"
-    output_dest="$output_folder/processing_files/${sequence%%.*}"
+    local file_name=""
+    local sample_name=""
+    file_name=$(basename "$sequence")
+    sample_name="${file_name%%.*}"
+    output_dest="$output_folder/processing_files/$sample_name"
 
     bakta --db "$db" \
-    --input "$sequence" \
     --output "$output_dest" \
+    --prefix "$sample_name" \
     --threads 1 \
     "$sequence"
 }
 export -f run_bakta
+export db output_folder
 
 #default values
 input_folder=""
 output_folder=""
-config_file_default=$script_dir/config_bash.yml
+config_file="$script_dir/config_bash.yml"
 
 while getopts ":c:o:i:h" opt; do
     case "$opt" in
         h) help; exit 0 ;;
         i) input_folder="$OPTARG";;
         o) output_folder="$OPTARG";;
-        c) config_file="${OPTARG:-$config_file_default}";;
+        c) config_file="$OPTARG";;
         \?) echo "Not an option" "-$OPTARG;" exit 1 ;;
         :) help; exit 1;;
     esac
@@ -94,12 +98,12 @@ if [ "$#" -eq 0 ]; then
 fi
 
 ############# run script #############
-
-. "$conda_source"
-conda activate "$conda_env"
-
 #defines config values
 config_values "$config_file"
+
+#activate conda environment
+. "$conda_source"
+conda activate "$conda_env"
 
 #validate input folder
 validate_input
@@ -108,4 +112,4 @@ validate_input
 create_output_structure "$output_folder"
 
 #run BAKTA
-parallel -j +0 run_bakta ::: "$input_folder"/*.{fasta,fna,fa}
+parallel --jobs "${SLURM_CPUS_PER_TASK:-1}" run_bakta ::: "$input_folder"/*.{fasta,fna,fa}
