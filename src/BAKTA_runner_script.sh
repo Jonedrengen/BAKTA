@@ -12,7 +12,11 @@ script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 
 #
 help() {
-    echo "Usage: $0 [options]"
+    echo "Usage: $0 -i <input_folder> -o <output_folder> [-c <config_file>] [-h]"
+    echo "  -i <input_folder>   : Path to the input folder containing FASTA files."
+    echo "  -o <output_folder>  : Path to the output folder where results will be saved."
+    echo "  -c <config_file>    : Path to the configuration file (default: $script_dir/config_bash.yml)."
+    echo "  -h                  : Display this help message."
 }
 
 # validate input
@@ -32,11 +36,7 @@ config_values() {
     config=$1
 
     # Load configuration values from config_bash.yml
-    partition=$(grep 'partition:' "$config" | awk '{print $2}')
-    cores=$(grep 'cores:' "$config" | awk '{print $2}')
-    mem=$(grep 'mem:' "$config" | awk '{print $2}')
-    job_name=$(grep 'job_name:' "$config" | awk '{print $2}')
-    db=$(grep 'db:' "$config" | awk '{print $2}')
+    db=$(grep '^db:' "$config" | awk '{print $2}')
 
     #validate
     if [ -z "$partition" ] || [ -z "$cores" ] || [ -z "$mem" ] || [ -z "$job_name" ]; then
