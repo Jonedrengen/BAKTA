@@ -105,11 +105,29 @@ aggregate_gff_files() {
     echo "Generated $(find "$gff3_output_destination" -type l -name "*.gff3" | wc -l) symlinks in $gff3_output_destination"
 }
 
+#create gff3 annotation file for ppanggolin
+generate_gff3_ppanggolin_annotated_file() {
+    local input_folder_with_gff3="$1"
+    local output_folder="$2"
+    local base_name=""
+    local path=""
+
+    touch "$output_folder/ppanggolin_anno_ready.tsv"
+    
+    for file in "$input_folder_with_gff3"/*.gff3; do
+        base_name=$(basename "$file" ".gff3")
+        path=$file
+        printf "%s\t%s\n" "$base_name" "$path" >> "$output_folder/ppanggolin_anno_ready.tsv"
+    done
+}
+
+# create a func to move SLURM
+
+
 #default values
 input_folder=""
 output_folder=""
 config_file="$script_dir/config_bash.yml"
-
 while getopts ":c:o:i:h" opt; do
     case "$opt" in
         h) help; exit 0 ;;
@@ -144,3 +162,6 @@ parallel --jobs "${SLURM_CPUS_PER_TASK:-1}" run_bakta ::: "$input_folder"/*.f*
 
 # symlink results into a single file (loops over folders in processing_files)
 aggregate_gff_files "$output_folder/processing_files" "$output_folder"
+
+# save a file with the gff3 files and their paths for ppanggolin
+generate_gff3_ppanggolin_annotated_file "$output_folder/combined_results/gff3_symlinks" "$output_folder/combined_results/pangolin_ready_files"
