@@ -30,7 +30,7 @@ validate_input() {
         echo "Error: Input folder does not exist."
         return 1
     fi
-    if [[ ! -f "$config_file" ]]; then
+    if [ ! -f "$config_file" ]; then
         echo "Error: Configuration file does not exist."
         return 1
     fi
