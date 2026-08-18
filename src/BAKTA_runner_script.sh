@@ -8,7 +8,7 @@
 
 #author: Jon Sztuk Slotved
 
-#get script directory
+#get script directory (currently not used, only used to get default config file path)
 script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 
 #help
@@ -57,6 +57,10 @@ create_output_structure() {
     output_folder="$1"
     mkdir -p "$output_folder"
     mkdir -p "$output_folder/processing_files"
+    mkdir -p "$output_folder/slurm_output"
+    mkdir -p "$output_folder/combined_results"
+    mkdir -p "$output_folder/combined_results/gff3_symlinks"
+    mkdir -p "$output_folder/combined_results/pangolin_ready_files"
 }
 
 #run BAKTA, using GNU parallel to run multiple samples in parallel
@@ -76,6 +80,30 @@ run_bakta() {
 }
 export -f run_bakta
 export db output_folder
+
+# aggregate results into a single file
+aggregate_gff_files() {
+    local input_folder="$1"
+    local output_folder="$2"
+    local gff3_file=""
+    local gff3_output_destination="$output_folder/combined_results/gff3_symlinks"
+    local counter=0
+
+    for folder in "$input_folder"/*; do
+        gff3_file=$(find "$folder" -type f -name "*.gff3")
+        
+        if [ ! -f "$gff3_file" ]; then
+            echo "No GFF3 file found in $folder"
+            continue
+        else
+            
+            ln -s "$gff3_file" "$gff3_output_destination/$(basename "$gff3_file")"
+        fi  
+        ((counter++))
+    done
+    echo "Processed $counter folders."
+    echo "Generated $(find "$gff3_output_destination" -type l -name "*.gff3" | wc -l) symlinks in $gff3_output_destination"
+}
 
 #default values
 input_folder=""
@@ -113,3 +141,6 @@ create_output_structure "$output_folder"
 
 #run BAKTA
 parallel --jobs "${SLURM_CPUS_PER_TASK:-1}" run_bakta ::: "$input_folder"/*.f*
+
+# symlink results into a single file (loops over folders in processing_files)
+aggregate_gff_files "$output_folder/processing_files" "$output_folder"
