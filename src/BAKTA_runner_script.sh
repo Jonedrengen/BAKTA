@@ -9,9 +9,6 @@
 #author: Jon Sztuk Slotved (JOSS@ssi.dk)
 #note: edit SBATCH parameters above to fit your needs.
 
-# script fails if any func returns a non-zero exit code
-set -e
-
 #get script directory (currently not used, only used to get default config file path)
 script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 
@@ -32,11 +29,11 @@ help() {
 validate_input() {
     if [ ! -d "$input_folder" ]; then
         echo "Error: Input folder does not exist."
-        return 1
+        exit 1
     fi
     if [ ! -f "$config_file" ]; then
         echo "Error: Configuration file does not exist."
-        return 1
+        exit 1
     fi
 }
 
@@ -98,7 +95,6 @@ aggregate_gff_files() {
             echo "No GFF3 file found in $folder"
             continue
         else
-            
             ln -s "$gff3_file" "$gff3_output_destination/$(basename "$gff3_file")"
         fi  
         ((counter++))
@@ -161,7 +157,7 @@ fi
 export -f run_bakta
 export db output_folder
 
-#defines config values
+#defines variables from config file
 config_values "$config_file"
 
 #activate conda environment
