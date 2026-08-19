@@ -6,7 +6,11 @@
 #SBATCH --error=BAKTA_%j.err
 #SBATCH --output=BAKTA_%j.out
 
-#author: Jon Sztuk Slotved
+#author: Jon Sztuk Slotved (JOSS@ssi.dk)
+#note: edit SBATCH parameters above to fit your needs.
+
+# script fails if any func returns a non-zero exit code
+set -e
 
 #get script directory (currently not used, only used to get default config file path)
 script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
@@ -63,7 +67,7 @@ create_output_structure() {
     mkdir -p "$output_folder/combined_results/pangolin_ready_files"
 }
 
-#run BAKTA, using GNU parallel to run multiple samples in parallel
+#run BAKTA func on a single isolate (uses parallel to run multiple isolates in parallel)
 run_bakta() {
     local sequence="$1"
     local file_name=""
@@ -78,18 +82,16 @@ run_bakta() {
     --threads 1 \
     "$sequence"
 }
-export -f run_bakta
-export db output_folder
 
-# aggregate results into a single file
+# aggregate gff3 outputs into a single file, with symlinks to the original
 aggregate_gff_files() {
-    local input_folder="$1"
+    local processing_files_input_folder="$1"
     local output_folder="$2"
     local gff3_file=""
     local gff3_output_destination="$output_folder/combined_results/gff3_symlinks"
     local counter=0
 
-    for folder in "$input_folder"/*; do
+    for folder in "$processing_files_input_folder"/*; do
         gff3_file=$(find "$folder" -type f -name "*.gff3")
         
         if [ ! -f "$gff3_file" ]; then
@@ -121,7 +123,14 @@ generate_gff3_ppanggolin_annotated_file() {
     done
 }
 
-# create a func to move SLURM
+#move slurm stdout and stderr to slurm_output folder
+move_slurm_stderr_stdout() {
+    local slurm_output_folder="$1"
+    local slurm_err_file="$2"
+    local slurm_out_file="$3"
+        mv -f "$slurm_err_file" "$slurm_output_folder/"
+        mv -f "$slurm_out_file" "$slurm_output_folder/"
+}
 
 
 #default values
@@ -143,7 +152,15 @@ if [ "$#" -eq 0 ]; then
     exit 1
 fi
 
-############# run script #############
+
+#######################################
+############# run script ##############
+#######################################
+
+#export Global func and vars for parallel
+export -f run_bakta
+export db output_folder
+
 #defines config values
 config_values "$config_file"
 
@@ -157,7 +174,7 @@ validate_input
 #create output folder structure
 create_output_structure "$output_folder"
 
-#run BAKTA
+#run BAKTA with parallel
 parallel --jobs "${SLURM_CPUS_PER_TASK:-1}" run_bakta ::: "$input_folder"/*.f*
 
 # symlink results into a single file (loops over folders in processing_files)
@@ -165,3 +182,6 @@ aggregate_gff_files "$output_folder/processing_files" "$output_folder"
 
 # save a file with the gff3 files and their paths for ppanggolin
 generate_gff3_ppanggolin_annotated_file "$output_folder/combined_results/gff3_symlinks" "$output_folder/combined_results/pangolin_ready_files"
+
+#move slurm stdout and stderr to slurm_output folder
+move_slurm_stderr_stdout "$output_folder/slurm_output" "BAKTA_${SLURM_JOB_ID}.err" "BAKTA_${SLURM_JOB_ID}.out"
