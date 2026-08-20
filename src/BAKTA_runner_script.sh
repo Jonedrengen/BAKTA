@@ -1,8 +1,8 @@
 #!/bin/bash
 #SBATCH -J BAKTA
 #SBATCH --partition=project
-#SBATCH --cpus-per-task=4
-#SBATCH --mem=16G
+#SBATCH --cpus-per-task=8
+#SBATCH --mem=32G
 #SBATCH --error=BAKTA_%j.err
 #SBATCH --output=BAKTA_%j.out
 
@@ -14,7 +14,7 @@ script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 
 #help
 help() {
-    echo "Usage: $0 -i <input_folder> -o <output_folder> -c <config_file> [-s <sample_list>] [-h]"
+    echo "Usage: $0 -i <input_folder> -o <output_folder> -c <config_file> [-h]"
     echo "Options:"
     echo "  -i <input_folder>   Path to the input folder containing FASTA files."
     echo "  -o <output_folder>  Path to the output folder where results will be saved."
@@ -55,7 +55,8 @@ config_values() {
 
 # create folder structure for output
 create_output_structure() {
-    output_folder="$1"
+    local output_folder="$1"
+    
     mkdir -p "$output_folder"
     mkdir -p "$output_folder/processing_files"
     mkdir -p "$output_folder/slurm_output"
