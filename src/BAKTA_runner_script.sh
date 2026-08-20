@@ -1,8 +1,8 @@
 #!/bin/bash
 #SBATCH -J BAKTA
 #SBATCH --partition=project
-#SBATCH --cpus-per-task=8
-#SBATCH --mem=32G
+#SBATCH --cpus-per-task=6
+#SBATCH --mem=96G
 #SBATCH --error=BAKTA_%j.err
 #SBATCH --output=BAKTA_%j.out
 
@@ -77,7 +77,7 @@ run_bakta() {
     bakta --db "$db" \
     --output "$output_dest" \
     --prefix "$sample_name" \
-    --threads 1 \
+    --threads 2 \
     "$sequence"
 }
 
@@ -112,7 +112,7 @@ generate_gff3_ppanggolin_annotated_file() {
     local path=""
 
     touch "$output_folder/ppanggolin_anno_ready.tsv"
-    
+
     for file in "$input_folder_with_gff3"/*.gff3; do
         base_name=$(basename "$file" ".gff3")
         path=$file
