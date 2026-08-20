@@ -9,9 +9,9 @@ database, and GNU Parallel.
 Create and activate a Conda environment, then install the required tools:
 
 ```bash
-conda create -n BAKTA_JOSS -y
+conda create -n BAKTA_JOSS
 conda activate BAKTA_JOSS
-conda install -c conda-forge -c bioconda bakta parallel -y
+conda install -c conda-forge -c bioconda bakta parallel
 ```
 
 Download a BAKTA database to a persistent location. Replace the example path
